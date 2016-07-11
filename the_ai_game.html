@@ -7,15 +7,15 @@
 	<script>
 		canvas.focus();
 		var c = canvas.getContext("2d");
-//player properties//
+		//player properties//
 		var player = {x: 0, y: 0, speed: 8, width: 100, height: 100, color: "red"};
 		player.xCenter = player.width / 2;
 		player.yCenter = player.height / 2;
-//buddy properties//
+		//buddy properties//
 		var buddy = {x: 100, y: 100, speed: 4, width: 60, height: 60, happy: 0, sad: 0};
 		buddy.xCenter = buddy.width / 2;
 		buddy.yCenter = buddy.height / 2;
-//key controls//
+		//key controls//
 		var keys = new Object();
 		document.onkeydown = function(e){
 			keys[e.keyCode] = true;
@@ -23,66 +23,66 @@
 		document.onkeyup = function(e){
 			delete keys[e.keyCode];
 		}
-//key controls//
+		//key controls//
 
 		function update(){
-//player controls//
-			if(keys[87] === true){
+			//player controls//
+			if (keys[87] === true){
 				player.y -= player.speed;
 			}
-			if(keys[83] === true){
+			if (keys[83] === true){
 				player.y += player.speed;
 			}
-			if(keys[68] === true){
+			if (keys[68] === true){
 				player.x += player.speed;
 			}
-			if(keys[65] === true){
+			if (keys[65] === true){
 				player.x -= player.speed;
 			}
 
-//buddy controls//
-			if(buddy.yCenter + buddy.y < player.y + player.yCenter){
+			//buddy controls//
+			if (buddy.yCenter + buddy.y < player.y + player.yCenter){
 				buddy.y += buddy.speed;
 			}
-			if(buddy.yCenter + buddy.y > player.y + player.yCenter){
+			if (buddy.yCenter + buddy.y > player.y + player.yCenter){
 				buddy.y -= buddy.speed;
 			}
-			if(buddy.xCenter + buddy.x < player.x + player.xCenter){
+			if (buddy.xCenter + buddy.x < player.x + player.xCenter){
 				buddy.x += buddy.speed;
 			}
-			if(buddy.xCenter + buddy.x > player.x + player.xCenter){
+			if (buddy.xCenter + buddy.x > player.x + player.xCenter){
 				buddy.x -= buddy.speed;
 			}
-			if(buddy.xCenter + buddy.x === player.x + player.xCenter && buddy.yCenter + buddy.y === player.y + player.yCenter){
+			if (buddy.xCenter + buddy.x === player.x + player.xCenter && buddy.yCenter + buddy.y === player.y + player.yCenter){
 				buddy.happy += 2;
 				buddy.sad -= 2;
-				if(buddy.happy > 255){
+				if (buddy.happy > 255){
 					buddy.happy = 255;
 				}
-				if(buddy.sad < -255){
+				if (buddy.sad < -255){
 					buddy.sad = -255;
 				}
-			} else if(buddy.xCenter + buddy.x !== player.x + player.xCenter){
+			} else if (buddy.xCenter + buddy.x !== player.x + player.xCenter){
 				buddy.happy -= 2;
 				buddy.sad += 2;
-				if(buddy.happy < -255){
+				if (buddy.happy < -255){
 					buddy.happy = -255
 				}
-				if(buddy.sad > 255){
+				if (buddy.sad > 255){
 					buddy.sad = 255;
 				}
 			}
-				console.log(buddy.happy + " " + buddy.sad);
+			console.log(buddy.happy + " " + buddy.sad);
 			
 		}
 
 		function render(){
 			c.clearRect(0, 0, canvas.width, canvas.height);
-//draws player//
+			//draws player//
 			c.fillStyle = player.color;
 			c.fillRect(player.x, player.y, player.width, player.height);
 
-//draws buddy//
+			//draws buddy//
 			c.fillStyle = "rgb(0, " + buddy.happy + "," + buddy.sad + ")";
 			c.fillRect(buddy.x, buddy.y, buddy.width, buddy.height);
 		}
