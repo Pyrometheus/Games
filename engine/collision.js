@@ -33,6 +33,12 @@ function yInterval(box){
 	return sortInterval(box.position.y, box.position.y + box.height);
 }
 
+//   Body
+
+function body(box, velocity){
+	return {box: box, velocity: velocity};
+}
+
 //   Collision Detection
 
 function overlapPeriod(a, b, relativeVelocity){
@@ -68,3 +74,39 @@ function impactSide(xOverlapPeriod, yOverlapPeriod, positionA, positionB){
 		return relativePosition.x < 0 ? 'right' : 'left';
 	return relativePosition.y < 0 ? 'down' : 'up';
 }
+
+function runFor(timeStep, bodies, onCollide){ //This is still runs in O(n^2) per collision.
+	var remainingTime = timeStep;
+	while(true){
+		var collision = null;
+		for(var i = 0; i < bodies.length; i++){
+			var bodyI = bodies[i];
+			for(var j = 0;  j < i; j++){
+				var bodyJ = bodies[j];
+				var impact = impactData(bodyI.box, bodyJ.box, sub(bodyI.velocity, bodyJ.velocity));
+				if(impact.time >= 0 && impact.time <= remainingTime &&
+					(collision === null || impact.time <= collision.time)){
+					impact.bodyI = bodyI;
+					impact.bodyJ = bodyJ;
+					collision = impact;
+				}
+			}
+		}
+
+		if(collision === null)
+			break;
+
+		moveBodies(collision.time, bodies);
+		onCollide(collision.bodyI, collision.bodyJ, collision.side);
+	}
+	moveBodies(remainingTime, bodies);
+}
+
+function moveBodies(timeStep, bodies){
+	for(var body of bodies){
+		body.box.position.x += timeStep * body.velocity.x;
+		body.box.position.y += timeStep * body.velocity.y;
+	}
+}
+
+oppositeSide = {left: 'right', right: 'left', up: 'down', down: 'up'};
