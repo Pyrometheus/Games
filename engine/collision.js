@@ -21,16 +21,16 @@ function intervalOverlap(a, b){
 
 //   Boxes
 
-function box(position, width, height){
-	return {position: position, width: width, height: height};
+function box(x, y, width, height){
+	return {x: x, y: y, width: width, height: height};
 }
 
 function xInterval(box){
-	return sortInterval(box.position.x, box.position.x + box.width);
+	return sortInterval(box.x, box.x + box.width);
 }
 
 function yInterval(box){
-	return sortInterval(box.position.y, box.position.y + box.height);
+	return sortInterval(box.y, box.y + box.height);
 }
 
 //   Collision Detection
@@ -55,7 +55,7 @@ function impactData(boxA, boxB, relativeVelocity){
 
 	var boxOverlapPeriod = intervalOverlap(xOverlapPeriod, yOverlapPeriod);
 
-	var side = impactSide(xOverlapPeriod, yOverlapPeriod, boxA.position.x - boxB.position.x, boxA.position.y - boxB.position.y);
+	var side = impactSide(xOverlapPeriod, yOverlapPeriod, boxA.x - boxB.x, boxA.y - boxB.y);
 
 	return {time: boxOverlapPeriod.left, side: side};
 }
