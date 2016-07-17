@@ -21,16 +21,16 @@ function intervalOverlap(a, b){
 
 //   Boxes
 
-function box(x, y, width, height){
-	return {x: x, y: y, width: width, height: height};
+function box(position, width, height){
+	return {position: position, width: width, height: height};
 }
 
 function xInterval(box){
-	return sortInterval(box.x, box.x + box.width);
+	return sortInterval(box.position.x, box.position.x + box.width);
 }
 
 function yInterval(box){
-	return sortInterval(box.y, box.y + box.height);
+	return sortInterval(box.position.y, box.position.y + box.height);
 }
 
 //   Collision Detection
@@ -55,15 +55,16 @@ function impactData(boxA, boxB, relativeVelocity){
 
 	var boxOverlapPeriod = intervalOverlap(xOverlapPeriod, yOverlapPeriod);
 
-	var side = impactSide(xOverlapPeriod, yOverlapPeriod, boxA.x - boxB.x, boxA.y - boxB.y);
+	var side = impactSide(xOverlapPeriod, yOverlapPeriod, boxA.position, boxB.position);
 
 	return {time: boxOverlapPeriod.left, side: side};
 }
 
-function impactSide(xOverlapPeriod, yOverlapPeriod, relativeX, relativeY){
+function impactSide(xOverlapPeriod, yOverlapPeriod, positionA, positionB){
+	var relativePosition = sub(positionA, positionB);
 	//If the x's overlap after the y's then the hit was on the left or right side.
 	var isLeftOrRight = xOverlapPeriod.left > yOverlapPeriod.left;
 	if(isLeftOrRight)
-		return relativeX < 0 ? 'right' : 'left';
-	return relativeY < 0 ? 'down' : 'up';
+		return relativePosition.x < 0 ? 'right' : 'left';
+	return relativePosition.y < 0 ? 'down' : 'up';
 }
