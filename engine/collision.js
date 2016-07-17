@@ -1,17 +1,3 @@
-//   Utils
-
-function clamp(low, high, x){
-	if(x < low)
-		return low;
-	if(x > high)
-		return high;
-	return x;
-}
-
-function within(low, high, x){
-	return x >= low && x <= high;
-}
-
 //   Intervals
 
 function interval(left, right){
@@ -49,20 +35,20 @@ function yInterval(box){
 
 //   Collision Detection
 
-function overlapPeriod(a, b, relativeSpeed){
-	var start = (b.left - a.right) / relativeSpeed; //Don't worry about division by 0, Javascript handles this using the Infinity value. For example, 1/0 = Infinity and -1/0 = -Infinity.
-	var stop = (b.right - a.left) / relativeSpeed;
+function overlapPeriod(a, b, relativeVelocity){
+	var start = (b.left - a.right) / relativeVelocity; //Don't worry about division by 0, Javascript handles this using the Infinity value. For example, 1/0 = Infinity and -1/0 = -Infinity.
+	var stop = (b.right - a.left) / relativeVelocity;
 	return sortInterval(start, stop);
 }
 
-function impactData(boxA, boxB, relativeXSpeed, relativeYSpeed){
+function impactData(boxA, boxB, relativeVelocity){
 	var xIntA = xInterval(boxA);
 	var yIntA = yInterval(boxA);
 	var xIntB = xInterval(boxB);
 	var yIntB = yInterval(boxB);
 
-	var xOverlapPeriod = overlapPeriod(xIntA, xIntB, relativeXSpeed); //The period of time when the boxes overlap in the x-dimension.
-	var yOverlapPeriod = overlapPeriod(yIntA, yIntB, relativeYSpeed);
+	var xOverlapPeriod = overlapPeriod(xIntA, xIntB, relativeVelocity.x); //The period of time when the boxes overlap in the x-dimension.
+	var yOverlapPeriod = overlapPeriod(yIntA, yIntB, relativeVelocity.y);
 
 	if(!doesIntervalOverlap(xOverlapPeriod, yOverlapPeriod))
 		return {time: -Infinity, side: 'left'};
