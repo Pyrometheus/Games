@@ -19,24 +19,18 @@ function intervalOverlap(a, b){
 	return interval(left, right);
 }
 
-//   Boxes
-
-function box(position, width, height){
-	return {position: position, width: width, height: height};
-}
-
-function xInterval(box){
-	return sortInterval(box.position.x, box.position.x + box.width);
-}
-
-function yInterval(box){
-	return sortInterval(box.position.y, box.position.y + box.height);
-}
-
 //   Body
 
-function body(box, velocity){
-	return {box: box, velocity: velocity};
+function body(position, velocity, width, height){
+	return {position: position, velocity: velocity, height: height, width: width};
+}
+
+function xInterval(body){
+	return sortInterval(body.position.x, body.position.x + body.width);
+}
+
+function yInterval(body){
+	return sortInterval(body.position.y, body.position.y + body.height);
 }
 
 //   Collision Detection
@@ -47,11 +41,11 @@ function overlapPeriod(a, b, relativeVelocity){
 	return sortInterval(start, stop);
 }
 
-function impactData(boxA, boxB, relativeVelocity){
-	var xIntA = xInterval(boxA);
-	var yIntA = yInterval(boxA);
-	var xIntB = xInterval(boxB);
-	var yIntB = yInterval(boxB);
+function impactData(bodyA, bodyB, relativeVelocity){
+	var xIntA = xInterval(bodyA);
+	var yIntA = yInterval(bodyA);
+	var xIntB = xInterval(bodyB);
+	var yIntB = yInterval(bodyB);
 
 	var xOverlapPeriod = overlapPeriod(xIntA, xIntB, relativeVelocity.x); //The period of time when the boxes overlap in the x-dimension.
 	var yOverlapPeriod = overlapPeriod(yIntA, yIntB, relativeVelocity.y);
@@ -61,7 +55,7 @@ function impactData(boxA, boxB, relativeVelocity){
 
 	var boxOverlapPeriod = intervalOverlap(xOverlapPeriod, yOverlapPeriod);
 
-	var side = impactSide(xOverlapPeriod, yOverlapPeriod, boxA.position, boxB.position);
+	var side = impactSide(xOverlapPeriod, yOverlapPeriod, bodyA.position, bodyB.position);
 
 	return {time: boxOverlapPeriod.left, side: side};
 }
@@ -78,14 +72,16 @@ function impactSide(xOverlapPeriod, yOverlapPeriod, positionA, positionB){
 function runFor(timeStep, bodies, onCollide){ //This is still runs in O(n^2) per collision.
 	var remainingTime = timeStep;
 	while(true){
+
 		var collision = null;
 		for(var i = 0; i < bodies.length; i++){
 			var bodyI = bodies[i];
+
 			for(var j = 0;  j < i; j++){
 				var bodyJ = bodies[j];
-				var impact = impactData(bodyI.box, bodyJ.box, sub(bodyI.velocity, bodyJ.velocity));
-				if(impact.time >= 0 && impact.time <= remainingTime &&
-					(collision === null || impact.time <= collision.time)){
+
+				var impact = impactData(bodyI, bodyJ, sub(bodyI.velocity, bodyJ.velocity));
+				if(impact.time >= 0 && impact.time <= remainingTime && (collision === null || impact.time <= collision.time)){
 					impact.bodyI = bodyI;
 					impact.bodyJ = bodyJ;
 					collision = impact;
@@ -104,8 +100,8 @@ function runFor(timeStep, bodies, onCollide){ //This is still runs in O(n^2) per
 
 function moveBodies(timeStep, bodies){
 	for(var body of bodies){
-		body.box.position.x += timeStep * body.velocity.x;
-		body.box.position.y += timeStep * body.velocity.y;
+		body.position.x += timeStep * body.velocity.x;
+		body.position.y += timeStep * body.velocity.y;
 	}
 }
 
