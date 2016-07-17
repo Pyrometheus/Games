@@ -33,9 +33,8 @@
 		var gravity = 0.0005;
 		function setup(){
 			oldTime = performance.now();
-			boxA = box(vec(10, 10), 10, 20);
-			boxB = box(vec(100, 200), 300, 100);
-			velocity = vec(0,0);
+			bodyA = body(vec(10, 10), vec(0,0), 10, 20);
+			bodyB = body(vec(100, 200), vec(0,0), 300, 100);
 		} setup();
 
 		function update(time){
@@ -51,17 +50,17 @@
 
 		function controls(timeStep){
 			if(keys[KEY_UP])
-				velocity.y -= acceleration * timeStep;
+				bodyA.velocity.y -= acceleration * timeStep;
 			if(keys[KEY_DOWN])
-				velocity.y += acceleration * timeStep;
+				bodyA.velocity.y += acceleration * timeStep;
 			if(keys[KEY_LEFT])
-				velocity.x -= acceleration * timeStep;
+				bodyA.velocity.x -= acceleration * timeStep;
 			if(keys[KEY_RIGHT])
-				velocity.x += acceleration * timeStep;
+				bodyA.velocity.x += acceleration * timeStep;
 		}
 
 		function physics(timeStep){
-			var impact = impactData(boxA, boxB, velocity);
+			var impact = impactData(bodyA, bodyB, bodyA.velocity);
 			var remainingTime = timeStep;
 
 			if(impact.time <= timeStep && impact.time >= 0){
@@ -74,45 +73,45 @@
 
 			move(remainingTime);
 
-			if(boxA.position.x < 0 || boxA.position.x > canvas.width - boxA.width){
+			if(bodyA.position.x < 0 || bodyA.position.x > canvas.width - bodyA.width){
 				bounce('left');
-				boxA.position.x = clamp(0, canvas.width - boxA.width, boxA.position.x);
+				bodyA.position.x = clamp(0, canvas.width - bodyA.width, bodyA.position.x);
 			}
-			if(boxA.position.y < 0 || boxA.position.y > canvas.height - boxA.height){
+			if(bodyA.position.y < 0 || bodyA.position.y > canvas.height - bodyA.height){
 				bounce('up');
-				boxA.position.y = clamp(0, canvas.height - boxA.height, boxA.position.y);
+				bodyA.position.y = clamp(0, canvas.height - bodyA.height, bodyA.position.y);
 			}
 
-			velocity.x *= Math.pow(friction, timeStep); //Friction
-			velocity.y *= Math.pow(friction, timeStep);
+			bodyA.velocity.x *= Math.pow(friction, timeStep); //Friction
+			bodyA.velocity.y *= Math.pow(friction, timeStep);
 
-			velocity.y += gravity * timeStep;
+			bodyA.velocity.y += gravity * timeStep;
 		}
 
 		function move(timeStep){
-			boxA.position.x += timeStep * velocity.x;
-			boxA.position.y += timeStep * velocity.y;
+			bodyA.position.x += timeStep * bodyA.velocity.x;
+			bodyA.position.y += timeStep * bodyA.velocity.y;
 		}
 
 		function bounce(side){
 			if(side == 'left' || side == 'right'){
-				velocity.x *= -restitution;
-				velocity.y *= surfaceFriction;
+				bodyA.velocity.x *= -restitution;
+				bodyA.velocity.y *= surfaceFriction;
 			}
 			else{
-				velocity.y *= -restitution;
-				velocity.x *= surfaceFriction;
+				bodyA.velocity.y *= -restitution;
+				bodyA.velocity.x *= surfaceFriction;
 			}
 		}
 
 		function render(){
 			c.clearRect(0, 0, canvas.width, canvas.height);
-			var draw = function(aBox, color){
+			var draw = function(body, color){
 				c.fillStyle = color;
-				c.fillRect(aBox.position.x, aBox.position.y, aBox.width, aBox.height)
+				c.fillRect(body.position.x, body.position.y, body.width, body.height);
 			};
-			draw(boxB, 'blue');
-			draw(boxA, 'red');
+			draw(bodyB, 'blue');
+			draw(bodyA, 'red');
 		}
 
 		function reload(time){

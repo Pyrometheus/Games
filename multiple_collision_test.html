@@ -39,10 +39,9 @@
 			bodies = [];
 			for(var i = 0; i < 10; i++){
 				var position = vec(Math.random() * canvas.width, Math.random() * canvas.height);
-				var collisionBox = box(position, 10, 10)
 				var angle = Math.random() * 2 * Math.PI;
 				var velocity = vec(Math.cos(angle) * 0.1, Math.sin(angle) * 0.1);
-				var theBody = body(collisionBox, velocity);
+				var theBody = body(position, velocity, 10, 10);
 				theBody.color = hsl(Math.random(), 1, 0.5);
 				bodies.push(theBody);
 			}
@@ -84,7 +83,7 @@
 			c.clearRect(0, 0, canvas.width, canvas.height);
 			for(var body of bodies){
 				c.fillStyle = body.color;
-				c.fillRect(body.box.position.x, body.box.position.y, body.box.width, body.box.height);
+				c.fillRect(body.position.x, body.position.y, body.width, body.height);
 			}
 		}
 
