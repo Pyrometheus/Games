@@ -33,8 +33,8 @@
 		var gravity = 0.0005;
 		function setup(){
 			oldTime = performance.now();
-			boxA = box(10, 10, 10, 20);
-			boxB = box(100, 200, 300, 100);
+			boxA = box(vec(10, 10), 10, 20);
+			boxB = box(vec(100, 200), 300, 100);
 			velocity = vec(0,0)
 		} setup();
 
@@ -74,13 +74,13 @@
 
 			move(remainingTime);
 
-			if(boxA.x < 0 || boxA.x > canvas.width - boxA.width){
+			if(boxA.position.x < 0 || boxA.x > canvas.width - boxA.width){
 				bounce('left');
-				boxA.x = clamp(0, canvas.width - boxA.width, boxA.x);
+				boxA.position.x = clamp(0, canvas.width - boxA.width, boxA.x);
 			}
-			if(boxA.y < 0 || boxA.y > canvas.height - boxA.height){
+			if(boxA.position.y < 0 || boxA.y > canvas.height - boxA.height){
 				bounce('up');
-				boxA.y = clamp(0, canvas.height - boxA.height, boxA.y);
+				boxA.position.y = clamp(0, canvas.height - boxA.height, boxA.y);
 			}
 
 			velocity.x *= Math.pow(friction, timeStep); //Friction
@@ -90,8 +90,8 @@
 		}
 
 		function move(timeStep){
-			boxA.x += timeStep * velocity.x;
-			boxA.y += timeStep * velocity.y;
+			boxA.position.x += timeStep * velocity.x;
+			boxA.position.y += timeStep * velocity.y;
 		}
 
 		function bounce(side){
