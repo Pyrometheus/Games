@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<body>
+	<canvas id="canvas" width="500" height="500" style="background-color: rgb(255, 255, 255); border: 3px solid black">
+	Your Bowser does not support the HTML5 Canvas tag, Sorry we tried to tell King Bowser he was out of date, he just wouldnt listen.
+	</canvas>
+	<script>
+		var c = canvas.getContext("2d");
+		var sx = 0; //source x
+		var frame_count = 0;
+		var dick_bug = new Image();
+		dick_bug.src = 'dick_bug.png';
+		dick_bug.addEventListener
+		('load', 
+			function(e){
+				render();
+			}
+		);
+
+		 function update() {
+
+		 	if(sx > 255){
+		 		sx = 0;
+		 		frame_count = 0;
+		 	}
+		 }
+
+		 function render() {
+		 	c.clearRect(0, 0, canvas.width, canvas.height);
+		 	c.drawImage(
+		 		dick_bug,//source image
+		 		sx, 0, //source x and y
+		 		255, 255, //source width and height
+		 		0, 0, //transfer location x and y
+		 		200, 200 //tranform width and height
+		 		);
+		 	frame_count += 1; //the frame count is to stop it from moving excessively
+		 	if(frame_count === 5){
+		 		sx += 255;
+		 		frame_count = 0;
+		 	}
+		 }
+
+		 function reload() {
+		 	update();
+		 	render();
+		 	requestAnimationFrame(reload);
+		 }
+		 reload();
+
+	</script>
+</body>
+</html>
