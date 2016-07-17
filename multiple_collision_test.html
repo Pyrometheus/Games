@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<body>
+	<canvas id="canvas" width="500" height="500" style="background-color: rgb(750, 750, 750); border: 3px solid black;">
+		Your browser does not support the HTML5 canvas tag
+	</canvas>
+	<script src='engine/collision.js'></script>
+	<script src='engine/math.js'></script>
+	<script>
+
+		canvas.focus();
+		var c = canvas.getContext("2d");
+		var keys = new Object();
+
+		document.onkeydown = function(e){
+			keys[e.keyCode] = true;
+		}
+
+		document.onkeyup = function(e){
+			delete keys[e.keyCode];
+		}
+
+		var KEY_ENTER = 13;
+		var KEY_UP = 38;
+		var KEY_DOWN = 40;
+		var KEY_LEFT = 37;
+		var KEY_RIGHT = 39;
+
+		var acceleration = 0.001;
+		var restitution = 0.5;
+		var friction = 0.999;
+		var surfaceFriction = 0.9;
+		var gravity = 0.0005;
+
+		var bodies;
+		var oldTime;
+		function setup(){
+			oldTime = performance.now();
+			bodies = [];
+			for(var i = 0; i < 10; i++){
+				var position = vec(Math.random() * canvas.width, Math.random() * canvas.height);
+				var collisionBox = box(position, 10, 10)
+				var angle = Math.random() * 2 * Math.PI;
+				var velocity = vec(Math.cos(angle) * 0.1, Math.sin(angle) * 0.1);
+				var theBody = body(collisionBox, velocity);
+				theBody.color = hsl(Math.random(), 1, 0.5);
+				bodies.push(theBody);
+			}
+		} setup();
+
+		function update(time){
+			var timeStep = time - oldTime;
+			oldTime = time;
+
+			if(keys[KEY_ENTER])
+				setup();
+
+			controls(timeStep);
+			physics(timeStep);
+		}
+
+		function controls(timeStep){
+		}
+
+		function physics(timeStep){
+			runFor(timeStep, bodies, function(bodyA, bodyB, side){
+				bounce(bodyA, side);
+				bounce(bodyB, oppositeSide[side]);
+			})
+		}
+
+		function bounce(body, side){
+			if(side == 'left' || side == 'right')
+			{
+				body.velocity.x *= -restitution;
+				body.velocity.y *= surfaceFriction;
+			} else {
+				body.velocity.y *= -restitution;
+				body.velocity.x *= surfaceFriction;
+			}
+		}
+
+		function render(){
+			c.clearRect(0, 0, canvas.width, canvas.height);
+			for(var body of bodies){
+				c.fillStyle = body.color;
+				c.fillRect(body.box.position.x, body.box.position.y, body.box.width, body.box.height);
+			}
+		}
+
+		function reload(time){
+			update(time);
+			render();
+			requestAnimationFrame(reload);
+		}	reload(performance.now());
+		
+	</script>
+</body>
+</html>
