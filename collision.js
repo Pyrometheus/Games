@@ -50,7 +50,7 @@ function yInterval(box){
 //   Collision Detection
 
 function overlapPeriod(a, b, relativeSpeed){
-	var start = (b.left - a.right) / relativeSpeed; //Don't worry about division by 0, Javascript handles this cleanly using the Infinity value. For example, 1/0 = Infinity and -1/0 = -Infinity.
+	var start = (b.left - a.right) / relativeSpeed; //Don't worry about division by 0, Javascript handles this using the Infinity value. For example, 1/0 = Infinity and -1/0 = -Infinity.
 	var stop = (b.right - a.left) / relativeSpeed;
 	return sortInterval(start, stop);
 }
@@ -65,7 +65,7 @@ function impactData(boxA, boxB, relativeXSpeed, relativeYSpeed){
 	var yOverlapPeriod = overlapPeriod(yIntA, yIntB, relativeYSpeed);
 
 	if(!doesIntervalOverlap(xOverlapPeriod, yOverlapPeriod))
-		return {time: Infinity, side: 'left'};
+		return {time: -Infinity, side: 'left'};
 
 	var boxOverlapPeriod = intervalOverlap(xOverlapPeriod, yOverlapPeriod);
 
