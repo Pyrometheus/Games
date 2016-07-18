@@ -135,6 +135,8 @@
 		function render(){
 			c.clearRect(0, 0, canvas.width, canvas.height);
 			for(var body of bodies){
+				c.fillStyle = 'black';
+				c.fillRect(body.position.x - 1, body.position.y - 1, body.width + 2, body.height + 2);
 				c.fillStyle = body.color || 'red';
 				c.fillRect(body.position.x, body.position.y, body.width, body.height);
 			}
