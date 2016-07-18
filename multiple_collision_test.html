@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <body>
-	<canvas id="canvas" width="500" height="500" style="background-color: rgb(750, 750, 750); border: 3px solid black;">
+	<canvas id="canvas" width="500" height="500" style="background-color: rgb(100, 100, 100); border: 3px solid black;">
 		Your browser does not support the HTML5 canvas tag
 	</canvas>
 	<script src='engine/collision.js'></script>
@@ -26,24 +26,44 @@
 		var KEY_LEFT = 37;
 		var KEY_RIGHT = 39;
 
-		var acceleration = 0.001;
-		var restitution = 0.5;
+		var restitution = 0.8;
 		var friction = 0.999;
-		var surfaceFriction = 0.9;
+		var surfaceFriction = 0.98;
 		var gravity = 0.0005;
+		var acceleration = 0.001;
 
 		var bodies;
 		var oldTime;
+		var player;
 		function setup(){
 			oldTime = performance.now();
 			bodies = [];
-			for(var i = 0; i < 10; i++){
-				var position = vec(Math.random() * canvas.width, Math.random() * canvas.height);
+
+			for(var i = 0; i < 20; i++){
+				var position = vec((3/20 + 14/20 * Math.random()) * canvas.width, (3/20 + 14/20 * Math.random()) * canvas.height);
 				var angle = Math.random() * 2 * Math.PI;
 				var velocity = vec(Math.cos(angle) * 0.1, Math.sin(angle) * 0.1);
-				var theBody = body(position, velocity, 10, 10);
-				theBody.color = hsl(Math.random(), 1, 0.5);
-				bodies.push(theBody);
+				var box = body(position, velocity, 20, 20);
+				box.color = hsl(Math.random(), 1, 0.5);
+				box.mass = 1;
+				bodies.push(box);
+			}
+
+			player = body(vec(canvas.width * 2/20, canvas.height * 2/20), vec(0, 0), 20, 40);
+			player.mass = 2;
+			player.color = hsl(0.3,1,0.9)
+			bodies.push(player);
+
+			var edgeUp = body(vec(0,0), vec(0,0), canvas.width, canvas.height / 20);
+			var edgeDown = body(vec(0, canvas.height * 19/20), vec(0,0), canvas.width, canvas.height / 20);
+			var edgeLeft = body(vec(0,0), vec(0,0), canvas.width / 20, canvas.height);
+			var edgeRight = body(vec(canvas.width * 19/20 ,0), vec(0,0), canvas.width / 20, canvas.height);
+
+			for(var edge of [edgeUp,edgeDown,edgeLeft,edgeRight]){
+				edge.isEdge = true;
+				edge.mass = Infinity;
+				edge.color = 'black';
+				bodies.push(edge);
 			}
 		} setup();
 
@@ -59,30 +79,53 @@
 		}
 
 		function controls(timeStep){
+			if(keys[KEY_UP])
+				player.velocity.y -= acceleration * timeStep;
+			if(keys[KEY_DOWN])
+				player.velocity.y += acceleration * timeStep;
+			if(keys[KEY_LEFT])
+				player.velocity.x -= acceleration * timeStep;
+			if(keys[KEY_RIGHT])
+				player.velocity.x += acceleration * timeStep;
 		}
 
 		function physics(timeStep){
-			runFor(timeStep, bodies, function(bodyA, bodyB, side){
-				bounce(bodyA, side);
-				bounce(bodyB, oppositeSide[side]);
+			for(var body of bodies){
+				if(!body.isEdge)
+					body.velocity.y += gravity * timeStep;
+
+				body.velocity.x *= Math.pow(friction, timeStep);
+				body.velocity.y *= Math.pow(friction, timeStep);
+			}
+
+			runFor(timeStep, bodies, function(body, other, side){
+				bounce(body, other, side);
 			})
 		}
 
-		function bounce(body, side){
+		function bounce(body, other, side){
 			if(side == 'left' || side == 'right')
 			{
-				body.velocity.x *= -restitution;
+				var impulse = -(1 + restitution) * (body.velocity.x - other.velocity.x) / (1/body.mass + 1/other.mass);
+				body.velocity.x += impulse / body.mass;
+				other.velocity.x += -impulse / other.mass;
+
 				body.velocity.y *= surfaceFriction;
+				other.velocity.y *= surfaceFriction;
 			} else {
-				body.velocity.y *= -restitution;
+				var impulse = -(1 + restitution) * (body.velocity.y - other.velocity.y) / (1/body.mass + 1/other.mass);
+				body.velocity.y += impulse / body.mass;
+				other.velocity.y += -impulse / other.mass;
+
 				body.velocity.x *= surfaceFriction;
+				other.velocity.x *= surfaceFriction;
 			}
 		}
 
 		function render(){
 			c.clearRect(0, 0, canvas.width, canvas.height);
 			for(var body of bodies){
-				c.fillStyle = body.color;
+				c.fillStyle = body.color || 'red';
 				c.fillRect(body.position.x, body.position.y, body.width, body.height);
 			}
 		}

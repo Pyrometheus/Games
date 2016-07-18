@@ -33,6 +33,10 @@ function yInterval(body){
 	return sortInterval(body.position.y, body.position.y + body.height);
 }
 
+function intersects(body, other){
+	return doesIntervalOverlap(xInterval(body), xInterval(other)) && doesIntervalOverlap(yInterval(body), yInterval(other));
+}
+
 //   Collision Detection
 
 function overlapPeriod(a, b, relativeVelocity){
@@ -82,8 +86,12 @@ function runFor(timeStep, bodies, onCollide){ //This is still runs in O(n^2) per
 
 				var impact = impactData(bodyI, bodyJ, sub(bodyI.velocity, bodyJ.velocity));
 				if(impact.time >= 0 && impact.time <= remainingTime && (collision === null || impact.time <= collision.time)){
-					impact.bodyI = bodyI;
-					impact.bodyJ = bodyJ;
+					if(impact.time == 0){
+						moveBodies(-10, [bodyI, bodyJ]);
+						break;
+					}
+					impact.body = bodyI;
+					impact.other = bodyJ;
 					collision = impact;
 				}
 			}
@@ -93,7 +101,9 @@ function runFor(timeStep, bodies, onCollide){ //This is still runs in O(n^2) per
 			break;
 
 		moveBodies(collision.time, bodies);
-		onCollide(collision.bodyI, collision.bodyJ, collision.side);
+		onCollide(collision.body, collision.other, collision.side);
+
+		remainingTime -= collision.time;
 	}
 	moveBodies(remainingTime, bodies);
 }
