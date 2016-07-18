@@ -26,7 +26,7 @@
 		var KEY_LEFT = 37;
 		var KEY_RIGHT = 39;
 
-		var restitution = 0.8;
+		var restitution = 0.9;
 		var friction = 0.999;
 		var surfaceFriction = 0.98;
 		var gravity = 0.0005;
@@ -49,8 +49,8 @@
 				bodies.push(box);
 			}
 
-			player = body(vec(canvas.width * 2/20, canvas.height * 2/20), vec(0, 0), 20, 40);
-			player.mass = 2;
+			player = body(vec(canvas.width * 2/20, canvas.height * 2/20), vec(0, 0), 40, 80);
+			player.mass = 8;
 			player.color = hsl(0.3,1,0.9)
 			bodies.push(player);
 
