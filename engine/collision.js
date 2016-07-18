@@ -87,7 +87,7 @@ function runFor(timeStep, bodies, onCollide){ //This is still runs in O(n^2) per
 				var impact = impactData(bodyI, bodyJ, sub(bodyI.velocity, bodyJ.velocity));
 				if(impact.time >= 0 && impact.time <= remainingTime && (collision === null || impact.time <= collision.time)){
 					if(impact.time == 0){
-						moveBodies(-10, [bodyI, bodyJ]);
+						moveBodies(-100, [bodyI, bodyJ]); //We don't want exact contacts, they lead to penetration.
 						break;
 					}
 					impact.body = bodyI;
