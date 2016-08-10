@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<body>
+	<canvas id="canvas" width="500" height="500" style="background-color: white; border: 3px solid black;">
+		Your Bowser does not support the HTML5 Canvas tag. We tried to tell him but you know how he gets.
+	</canvas>
+
+	<script>
+	//rememer the square tag game? well I'm remaking it to use for enemy ai! It should be roughly the same application.
+		canvas.focus();
+		var c = canvas.getContext("2d");
+
+		//player stats//
+		var player = {x:0, y:0, vx:0, vy:0, north:0, south:0, east:0, west:0, speed:8};
+
+		//enemy stats//
+		var enemy = {x:100, y:100, speed:5};
+
+		//food stats//
+		var food = {x:300, y: 300};
+
+		//remote//
+		var W = 87;//north
+		var A = 65;//west
+		var S = 83;//south
+		var D = 68;//east
+		var keys = new Object();
+		document.onkeydown = function(e) {
+			keys[e.keyCode] = true;
+			console.log(keys);
+		}
+		document.onkeyup = function(e) {
+			delete keys[e.keyCode];
+		}
+
+
+		function update() {
+			//player remote formulas//
+			player.x += player.vx;
+			player.y += player.vy;
+			player.vx = player.west + player.east;
+			player.vy = player.north + player.south;
+			//player remote//
+			if(keys[W] === true){
+				player.north = -player.speed;
+			}
+			if(keys[W] !== true){
+				player.north = 0;
+			}
+			if(keys[S] === true){
+				player.south = player.speed;
+			}
+			if(keys[S] !== true){
+				player.south = 0;
+			}
+			if(keys[D] === true){
+				player.east = player.speed;
+			}
+			if(keys[D] !== true){
+				player.east = 0;
+			}
+			if(keys[A] === true){
+				player.west = -player.speed;
+			}
+			if(keys[A] !== true){
+				player.west = 0;
+			}
+
+		}
+
+		function render() {
+			c.clearRect(0, 0, canvas.width, canvas.height);
+			//player render//
+			c.fillStyle = "rgb(255, 0, 0)";
+			c.fillRect(player.x, player.y, 50, 50);
+			//enemy render//
+			c.fillStyle = "rgb(0, 0, 255)";
+			c.fillRect(enemy.x, enemy.y, 100, 100);
+		}
+
+		function reload() {
+			update();
+			render();
+			requestAnimationFrame(reload);
+		}
+		reload();
+	</script>
+</body>
+</html>
