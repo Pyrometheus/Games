@@ -5,6 +5,7 @@
 		Your browser does not support the HTML5 canvas tag
 	</canvas>
 	<script src='engine/collision.js'></script>
+	<script src='engine/dynamics.js'></script>
 	<script src='engine/math.js'></script>
 	<script>
 
@@ -26,9 +27,7 @@
 		var KEY_LEFT = 37;
 		var KEY_RIGHT = 39;
 
-		var restitution = 0.9;
 		var friction = 0.999;
-		var surfaceFriction = 0.98;
 		var gravity = 0.0005;
 		var acceleration = 0.001;
 
@@ -39,7 +38,8 @@
 			oldTime = performance.now();
 			bodies = [];
 
-			for(var i = 0; i < 50; i++){
+			for(var i = 0; i < 60; i++){
+				//var position = vec(canvas.width/20 + 1 + i * 21, canvas.height/20 + 1)
 				var position = vec((3/20 + 14/20 * Math.random()) * canvas.width, (3/20 + 14/20 * Math.random()) * canvas.height);
 				var angle = Math.random() * 2 * Math.PI;
 				var velocity = vec(Math.cos(angle) * 0.1, Math.sin(angle) * 0.1);
@@ -49,9 +49,9 @@
 				bodies.push(box);
 			}
 
-			player = body(vec(canvas.width * 2/20, canvas.height * 2/20), vec(0, 0), 40, 80);
+			player = body(vec(canvas.width * 3/20, canvas.height * 3/20), vec(0, 0), 40, 80);
 			player.mass = 8;
-			player.color = hsl(0.3,1,0.9)
+			player.color = hsl(0.3,1,0.9);
 			bodies.push(player);
 
 			var edgeUp = body(vec(0,0), vec(0,0), canvas.width, canvas.height / 20);
@@ -68,7 +68,7 @@
 		} setup();
 
 		function update(time){
-			var timeStep = time - oldTime;
+			var timeStep = Math.min(time - oldTime, 100);
 			oldTime = time;
 
 			if(keys[KEY_ENTER])
@@ -101,35 +101,6 @@
 			runFor(timeStep, bodies, function(body, other, side){
 				bounce(body, other, side);
 			})
-		}
-
-		function bounce(body, other, side){
-			if(side == 'left' || side == 'right')
-			{
-				var impulse = bounceImpulse(body.velocity.x, other.velocity.x, body.mass, other.mass);
-				body.velocity.x += impulse / body.mass;
-				other.velocity.x += -impulse / other.mass;
-
-				impulse = frictionImpulse(body.velocity.y, other.velocity.y, body.mass, other.mass);
-				body.velocity.y += impulse / body.mass;
-				other.velocity.y -= impulse / other.mass;
-			} else {
-				var impulse = bounceImpulse(body.velocity.y, other.velocity.y, body.mass, other.mass);
-				body.velocity.y += impulse / body.mass;
-				other.velocity.y += -impulse / other.mass;
-
-				impulse = frictionImpulse(body.velocity.x, other.velocity.x, body.mass, other.mass);
-				body.velocity.x += impulse / body.mass;
-				other.velocity.x -= impulse / other.mass;
-			}
-		}
-
-		function bounceImpulse(velocity, otherVelocity, mass, otherMass){
-			return -(1 + restitution) * (velocity - otherVelocity) / (1/mass + 1/otherMass);
-		}
-
-		function frictionImpulse(velocity, otherVelocity, mass, otherMass){
-			return (surfaceFriction - 1) * (velocity - otherVelocity) / (1/mass + 1/otherMass);
 		}
 
 		function render(){

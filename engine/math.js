@@ -30,6 +30,8 @@ function normal(a){return div(a, length(a));}
 function comp(a, b){return dot(a, b) / length(a);}
 function proj(a, b){return mul(a, dot(a, b) / lenSquared(a));}
 
+function vclone(v){return vec(v.x, v.y);}
+
 //   Colors
 
 function rgb(r,g,b){

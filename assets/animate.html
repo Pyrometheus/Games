@@ -7,9 +7,9 @@
 	<script>
 		var c = canvas.getContext("2d");
 		var sx = 0; //source x
-		var frame_count = 0;
+		var time = 0;
 		var dick_bug = new Image();
-		dick_bug.src = 'dick_bug.png';
+		dick_bug.src = 'mudd_shotgun.png';
 		dick_bug.addEventListener
 		('load', 
 			function(e){
@@ -18,27 +18,19 @@
 		);
 
 		 function update() {
-
-		 	if(sx > 255){
-		 		sx = 0;
-		 		frame_count = 0;
-		 	}
+		 	time++;
 		 }
 
 		 function render() {
+		 	var frame = Math.floor(time / 10) % 6;
 		 	c.clearRect(0, 0, canvas.width, canvas.height);
 		 	c.drawImage(
 		 		dick_bug,//source image
-		 		sx, 0, //source x and y
-		 		255, 255, //source width and height
+		 		frame * 100, 0, //source x and y
+		 		100, 100, //source width and height
 		 		0, 0, //transfer location x and y
-		 		200, 200 //tranform width and height
+		 		100, 100 //tranform width and height
 		 		);
-		 	frame_count += 1; //the frame count is to stop it from moving excessively
-		 	if(frame_count === 5){
-		 		sx += 255;
-		 		frame_count = 0;
-		 	}
 		 }
 
 		 function reload() {

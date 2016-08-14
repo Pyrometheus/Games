@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<body>
+	<canvas id="canvas" width="500" height="500" style="background-color: rgb(100, 100, 100); border: 3px solid black;">
+		Your browser does not support the HTML5 canvas tag
+	</canvas>
+	<script src='engine/collision.js'></script>
+	<script src='engine/dynamics.js'></script>
+	<script src='engine/math.js'></script>
+	<script>
+
+		canvas.focus();
+		var c = canvas.getContext("2d");
+		var keys = new Object();
+
+		document.onkeydown = function(e){
+			keys[e.keyCode] = true;
+		}
+
+		document.onkeyup = function(e){
+			delete keys[e.keyCode];
+		}
+
+		var KEY_ENTER = 13;
+		var KEY_UP = 38;
+		var KEY_DOWN = 40;
+		var KEY_LEFT = 37;
+		var KEY_RIGHT = 39;
+		var KEY_SPACE = 32;
+		var KEY_SHIFT = 16;
+
+		var friction = 0.999;
+		var gravity = 0.0005;
+
+		var bodies;
+		var oldTime;
+		var player;
+		function setup(){
+			oldTime = performance.now();
+			bodies = [];
+
+			player = body(vec(canvas.width * 3/20, canvas.height * 3/20), vec(0, 0), 40, 80);
+			player.mass = 8;
+			player.color = hsl(0.3,1,0.9);
+			bodies.push(player);
+
+			var edgeUp = body(vec(0,0), vec(0,0), canvas.width, canvas.height / 20);
+			var edgeDown = body(vec(0, canvas.height * 19/20), vec(0,0), canvas.width, canvas.height / 20);
+			var edgeLeft = body(vec(0,0), vec(0,0), canvas.width / 20, canvas.height);
+			var edgeRight = body(vec(canvas.width * 19/20 ,0), vec(0,0), canvas.width / 20, canvas.height);
+
+			var edgeMid = body(vec(canvas.width / 2, canvas.height * 9/20), vec(0,0), canvas.width / 2, canvas.height / 20);
+
+			for(var edge of [edgeUp,edgeDown,edgeLeft,edgeRight, edgeMid]){
+				edge.isEdge = true;
+				edge.mass = Infinity;
+				edge.color = 'black';
+				bodies.push(edge);
+			}
+		} setup();
+
+		function update(time){
+			var timeStep = Math.min(time - oldTime, 100);
+			oldTime = time;
+
+			if(keys[KEY_ENTER])
+				setup();
+
+			controls(timeStep);
+			physics(timeStep);
+		}
+
+		var acceleration = 0.0012;
+		var onGround = false;
+		var onWall = false;
+		var jumpCoolDown = false;
+		var wallJumpCoolDown = false;
+		function controls(timeStep){
+			onGround = isColliding(footBody());
+			onWall = isColliding(sideBody());
+
+			if(!onGround)
+				jumpCoolDown = false;
+
+			if(!onWall)
+				wallJumpCoolDown = false;
+
+			var control = onGround ? 1 : 0.3;
+
+			if(keys[KEY_SPACE] && onGround && !jumpCoolDown){
+				jumpCoolDown = true;
+				player.velocity.y += -0.5;
+			}
+
+			if(keys[KEY_LEFT])
+				player.velocity.x -= acceleration * timeStep * control;
+
+			if(keys[KEY_RIGHT])
+				player.velocity.x += acceleration * timeStep * control;
+
+			if(keys[KEY_SHIFT] && onWall && !wallJumpCoolDown){
+				player.velocity.x *= 0.1;
+				player.velocity.y *= 0.1
+			}
+
+			if(keys[KEY_SPACE] && onWall && !wallJumpCoolDown){
+				var isLeft = isColliding(leftSideBody());
+				player.velocity.x += isLeft ? 0.3 : -0.3;
+				player.velocity.y += -0.4;
+				wallJumpCoolDown = true;
+			}
+		}
+
+		function physics(timeStep){
+			for(var body of bodies){
+				if(!body.isEdge)
+					body.velocity.y += gravity * timeStep;
+
+				body.velocity.x *= Math.pow(friction, timeStep);
+				body.velocity.y *= Math.pow(friction, timeStep);
+			}
+
+			runFor(timeStep, bodies, function(body, other, side){
+				var restitution = body == player || other == player ? 0.1 : 0.5;
+				bounce(body, other, side, restitution);
+			})
+		}
+
+		var controlRegionSize = 3;
+		function footBody(){
+			var foot = body(vclone(player.position), vec(0,0), player.width, controlRegionSize);
+			foot.position.y += player.height;
+			return foot;
+		}
+
+		function sideBody(){
+			var face = body(vclone(player.position), vec(0,0), player.width + controlRegionSize * 2, player.height);
+			face.position.x -= controlRegionSize;
+			return face;
+		}
+
+		function leftSideBody(){
+			var face = body(vclone(player.position), vec(0,0), controlRegionSize, player.height);
+			face.position.x -= controlRegionSize;
+			return face;
+		}
+
+		function isColliding(body){
+			for(var other of bodies){
+				if(other === player)
+					continue;
+				if(intersects(body, other))
+					return true;
+			}
+			return false;
+		}
+
+		function draw(body, color){
+			c.fillStyle = 'black';
+			c.fillRect(body.position.x - 1, body.position.y - 1, body.width + 2, body.height + 2);
+			c.fillStyle = color || body.color || 'red';
+			c.fillRect(body.position.x, body.position.y, body.width, body.height);
+		}
+
+		var showControlRegions = true;
+		function render(){
+			c.clearRect(0, 0, canvas.width, canvas.height);
+			if(player && showControlRegions){
+				draw(footBody(), onGround ? 'green' : 'red');
+				draw(sideBody(), onWall ? 'green' : 'red');
+			}
+			for(var block of bodies){
+				draw(block);
+			}
+		}
+
+		function reload(time){
+			update(time);
+			render();
+			requestAnimationFrame(reload);
+		}	reload(performance.now());
+		
+	</script>
+</body>
+</html>

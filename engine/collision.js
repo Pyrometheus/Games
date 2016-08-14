@@ -9,8 +9,7 @@ function sortInterval(a, b){
 }
 
 function doesIntervalOverlap(a, b){
-	return within(a.left, a.right, b.left) || within(a.left, a.right, b.right) 
-	|| within(b.left, b.right, a.left) || within(b.left, b.right, a.right); 
+	return within(a.left, a.right, b.left) || within(b.left, b.right, a.left);
 }
 
 function intervalOverlap(a, b){
@@ -83,20 +82,15 @@ function runFor(timeStep, bodies, onCollide){ //This is still runs in O(n^2) per
 
 			for(var j = 0;  j < i; j++){
 				var bodyJ = bodies[j];
+				var thisCollision = impactData(bodyI, bodyJ, sub(bodyI.velocity, bodyJ.velocity));
 
-				var impact = impactData(bodyI, bodyJ, sub(bodyI.velocity, bodyJ.velocity));
-				if(impact.time >= 0 && impact.time <= remainingTime && (collision === null || impact.time <= collision.time)){
-					if(impact.time == 0){
-						moveBodies(-100, [bodyI, bodyJ]); //We don't want exact contacts, they lead to penetration.
-						break;
-					}
-					impact.body = bodyI;
-					impact.other = bodyJ;
-					collision = impact;
+				if(thisCollision.time > 0 && thisCollision.time <= remainingTime && (collision === null || thisCollision.time <= collision.time)){
+					thisCollision.body = bodyI;
+					thisCollision.other = bodyJ;
+					collision = thisCollision;
 				}
 			}
 		}
-
 		if(collision === null)
 			break;
 
@@ -115,4 +109,4 @@ function moveBodies(timeStep, bodies){
 	}
 }
 
-oppositeSide = {left: 'right', right: 'left', up: 'down', down: 'up'};
+var oppositeSide = {left: 'right', right: 'left', up: 'down', down: 'up'};
