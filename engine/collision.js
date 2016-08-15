@@ -36,6 +36,10 @@ function intersects(body, other){
 	return doesIntervalOverlap(xInterval(body), xInterval(other)) && doesIntervalOverlap(yInterval(body), yInterval(other));
 }
 
+// function center(body){
+// 	return vec(body.position.x + body.width / 2, body.position.y + body.height / 2);
+// }
+
 //   Collision Detection
 
 function overlapPeriod(a, b, relativeVelocity){
@@ -95,6 +99,7 @@ function runFor(timeStep, bodies, onCollide){ //This is still runs in O(n^2) per
 			break;
 
 		moveBodies(collision.time, bodies);
+		positionalCorrection(collision.body, collision.other, collision.side);
 		onCollide(collision.body, collision.other, collision.side);
 
 		remainingTime -= collision.time;
@@ -107,6 +112,48 @@ function moveBodies(timeStep, bodies){
 		body.position.x += timeStep * body.velocity.x;
 		body.position.y += timeStep * body.velocity.y;
 	}
+}
+
+//Positional correction. Corrects floating point errors, objects can often pass through eachother otherwise.
+
+var skin = 0.0001;
+function positionalCorrection(body, other, side){
+	if(side == 'left' || side == 'right')
+		return;
+	correctVertical(body, other);
+	// var lower, upper;
+	// if(body.position.y > other.position.y){
+	// 	lower = body;
+	// 	upper = other;
+	// } else {
+	// 	lower = other;
+	// 	upper = body;
+	// }
+	// upper.position.y = lower.position.y - upper.height - skin;
+}
+
+function correctVertical(body, other){
+	var upper, lower;
+	if(body.position.y < other.position.y){
+		upper = body;
+		lower = other;
+	} else {
+		upper = other;
+		lower = body;
+	}
+
+	if(upper.mass > lower.mass)
+		snapUp(upper, lower);
+	else
+		snapDown(upper, lower);
+}
+
+function snapDown(upper, lower){
+	upper.position.y = lower.position.y - upper.height - skin;
+}
+
+function snapUp(upper, lower){
+	lower.position.y = upper.position.y + upper.height + skin;
 }
 
 var oppositeSide = {left: 'right', right: 'left', up: 'down', down: 'up'};

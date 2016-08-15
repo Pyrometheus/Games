@@ -1,4 +1,4 @@
-var surfaceFriction = 0.95;
+var surfaceFriction = 0.92;
 
 function bounce(body, other, side, restitution){
 	if(side == 'left' || side == 'right')

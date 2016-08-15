@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html>
-<body>
+<body>	
+
+    <p>Space to jump and wall jump. Arrows to move. Shift to wall grab.</p>
 	<canvas id="canvas" width="500" height="500" style="background-color: rgb(100, 100, 100); border: 3px solid black;">
 		Your browser does not support the HTML5 canvas tag
 	</canvas>
+
 	<script src='engine/collision.js'></script>
 	<script src='engine/dynamics.js'></script>
 	<script src='engine/math.js'></script>
@@ -29,8 +32,8 @@
 		var KEY_SPACE = 32;
 		var KEY_SHIFT = 16;
 
-		var friction = 0.999;
-		var gravity = 0.0005;
+		var friction = 0.9999;
+		var gravity = 0.001;
 
 		var bodies;
 		var oldTime;
@@ -70,25 +73,49 @@
 			physics(timeStep);
 		}
 
-		var acceleration = 0.0012;
+		var acceleration = 0.0020;
 		var onGround = false;
 		var onWall = false;
-		var jumpCoolDown = false;
-		var wallJumpCoolDown = false;
+		var onCeiling = false;
+		var alreadyJumped = false;
+		var alreadyWallJumped = false;
+		var airControl = 0.15;
+		var stamina = 100;
+		var staminaRegen = 0.05;
+		var coolDown = 0;
+
 		function controls(timeStep){
 			onGround = isColliding(footBody());
 			onWall = isColliding(sideBody());
+			onCeiling = isColliding(headBody());
 
 			if(!onGround)
-				jumpCoolDown = false;
+				alreadyJumped = false;
 
 			if(!onWall)
-				wallJumpCoolDown = false;
+				alreadyWallJumped = false;
 
-			var control = onGround ? 1 : 0.3;
+			var control = onGround ? 1 : (onCeiling ? 0.5 : airControl);
 
-			if(keys[KEY_SPACE] && onGround && !jumpCoolDown){
-				jumpCoolDown = true;
+			if(onGround){
+				stamina += staminaRegen * timeStep;
+				if(stamina > 100)
+					stamina = 100;
+			}
+
+			coolDown -= timeStep;
+			if(coolDown < 0)
+				coolDown = 0;
+
+			if(keys[KEY_SPACE] && onWall && !alreadyWallJumped && spendStamina(20, 10)){
+				var isLeft = isColliding(leftSideBody());
+				player.velocity.x += isLeft ? 0.3 : -0.3;
+				player.velocity.y += -0.4;
+				alreadyWallJumped = true;
+			}
+
+			if(keys[KEY_SPACE] && onGround && !alreadyJumped && spendStamina(20, 10)){
+				alreadyJumped = true;
 				player.velocity.y += -0.5;
 			}
 
@@ -98,17 +125,23 @@
 			if(keys[KEY_RIGHT])
 				player.velocity.x += acceleration * timeStep * control;
 
-			if(keys[KEY_SHIFT] && onWall && !wallJumpCoolDown){
-				player.velocity.x *= 0.1;
-				player.velocity.y *= 0.1
+			if(keys[KEY_SHIFT] && onWall && !alreadyWallJumped && spendStamina(0.5, 0)){
+				player.velocity.x *= 0.5;
+				player.velocity.y *= 0.5
 			}
 
-			if(keys[KEY_SPACE] && onWall && !wallJumpCoolDown){
-				var isLeft = isColliding(leftSideBody());
-				player.velocity.x += isLeft ? 0.3 : -0.3;
-				player.velocity.y += -0.4;
-				wallJumpCoolDown = true;
+			if(keys[KEY_SHIFT] && onCeiling && spendStamina(1, 0)){
+				player.velocity.y -= 1;
 			}
+		}
+
+		function spendStamina(amount, coolDownTime){
+			if(stamina >= amount && coolDown <= 0){
+				coolDown = coolDownTime;
+				stamina -= amount;
+				return true;
+			}
+			return false;
 		}
 
 		function physics(timeStep){
@@ -126,11 +159,18 @@
 			})
 		}
 
-		var controlRegionSize = 3;
+		var controlRegionSize = 5;
 		function footBody(){
-			var foot = body(vclone(player.position), vec(0,0), player.width, controlRegionSize);
-			foot.position.y += player.height;
+			var foot = body(vclone(player.position), vec(0,0), player.width, controlRegionSize * 2);
+			foot.position.y += player.height - controlRegionSize;
 			return foot;
+		}
+
+		var headRegionSize = 10;
+		function headBody(){
+			var head = body(vclone(player.position), vec(0,0), player.width, headRegionSize * 2);
+			head.position.y -= headRegionSize;
+			return head;
 		}
 
 		function sideBody(){
@@ -140,7 +180,7 @@
 		}
 
 		function leftSideBody(){
-			var face = body(vclone(player.position), vec(0,0), controlRegionSize, player.height);
+			var face = body(vclone(player.position), vec(0,0), controlRegionSize + player.width / 2, player.height);
 			face.position.x -= controlRegionSize;
 			return face;
 		}
@@ -162,16 +202,22 @@
 			c.fillRect(body.position.x, body.position.y, body.width, body.height);
 		}
 
-		var showControlRegions = true;
+		var showControlRegions = false;
 		function render(){
 			c.clearRect(0, 0, canvas.width, canvas.height);
 			if(player && showControlRegions){
 				draw(footBody(), onGround ? 'green' : 'red');
 				draw(sideBody(), onWall ? 'green' : 'red');
+				draw(headBody(), onCeiling ? 'green' : 'red');
 			}
 			for(var block of bodies){
 				draw(block);
 			}
+
+			c.fillStyle = 'rgb(0,70,0)';
+			c.fillRect(0,0,100,20);
+			c.fillStyle = 'green';
+			c.fillRect(0,0,stamina,20);
 		}
 
 		function reload(time){

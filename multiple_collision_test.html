@@ -34,11 +34,13 @@
 		var bodies;
 		var oldTime;
 		var player;
+
+		var edgeDown;
 		function setup(){
 			oldTime = performance.now();
 			bodies = [];
 
-			for(var i = 0; i < 60; i++){
+			for(var i = 0; i < 20; i++){
 				//var position = vec(canvas.width/20 + 1 + i * 21, canvas.height/20 + 1)
 				var position = vec((3/20 + 14/20 * Math.random()) * canvas.width, (3/20 + 14/20 * Math.random()) * canvas.height);
 				var angle = Math.random() * 2 * Math.PI;
@@ -55,7 +57,7 @@
 			bodies.push(player);
 
 			var edgeUp = body(vec(0,0), vec(0,0), canvas.width, canvas.height / 20);
-			var edgeDown = body(vec(0, canvas.height * 19/20), vec(0,0), canvas.width, canvas.height / 20);
+			edgeDown = body(vec(0, canvas.height * 19/20), vec(0,0), canvas.width, canvas.height / 20);
 			var edgeLeft = body(vec(0,0), vec(0,0), canvas.width / 20, canvas.height);
 			var edgeRight = body(vec(canvas.width * 19/20 ,0), vec(0,0), canvas.width / 20, canvas.height);
 
@@ -99,7 +101,8 @@
 			}
 
 			runFor(timeStep, bodies, function(body, other, side){
-				bounce(body, other, side);
+				var restitution = body == player || other == player ? 0.1 : 0.9;
+				bounce(body, other, side, restitution);
 			})
 		}
 
