@@ -2,7 +2,7 @@
 <html>
 <body>	
 
-    <p>Space to jump and wall jump. Arrows to move. Shift to wall grab and ceiling grab.</p>
+    <p>Space to jump and wall jump. WASD to move. Shift to wall grab and ceiling grab.</p>
 	<canvas id="canvas" width="500" height="500" style="background-color: #b99d5f; border: 3px solid black;">
 		Your browser does not support the HTML5 canvas tag
 	</canvas>
@@ -23,20 +23,23 @@
 		wood_box.src = 'assets/wood_box.png';
 
 		document.onkeydown = function(e){
+			e.preventDefault();
 			keys[e.keyCode] = true;
 		}
 
 		document.onkeyup = function(e){
+			e.preventDefault();
 			delete keys[e.keyCode];
 		}
 
 		var KEY_ENTER = 13;
-		var KEY_UP = 38;
-		var KEY_DOWN = 40;
-		var KEY_LEFT = 37;
-		var KEY_RIGHT = 39; 
+		var KEY_UP = 87;
+		var KEY_DOWN = 83;
+		var KEY_LEFT = 65;
+		var KEY_RIGHT = 68; 
 		var KEY_SPACE = 32;
 		var KEY_SHIFT = 16;
+		var KEY_ALT = 18;
 
 		var friction = 0.9999;
 		var gravity = 0.001;
@@ -91,8 +94,6 @@
 		var onGround = false;
 		var onWall = false;
 		var onCeiling = false;
-		var alreadyJumped = false;
-		var alreadyWallJumped = false;
 		var airControl = 0.15;
 		var stamina = 100;
 		var staminaRegen = 0.05;
@@ -106,12 +107,6 @@
 			onGround = isColliding(footBody());
 			onWall = isColliding(sideBody());
 			onCeiling = isColliding(headBody());
-
-			if(!onGround)
-				alreadyJumped = false;
-
-			if(!onWall)
-				alreadyWallJumped = false;
 
 			var control = onGround ? 1 : (onCeiling ? 0.5 : airControl);
 
@@ -130,17 +125,18 @@
 			if(!onGround || Math.abs(player.velocity.x) < 0.01)
 				walkTime = 0;
 
-			if(keys[KEY_SPACE] && onGround && !alreadyJumped && spendStamina(20, 200)){
-				alreadyJumped = true;
+			if(keys[KEY_SPACE] && onGround && spendStamina(20, 200)){
 				player.velocity.y += -0.5;
 			}
 
-			if(keys[KEY_SPACE] && onWall && !alreadyWallJumped && spendStamina(20, 200)){
+			if(keys[KEY_SPACE] && onWall && spendStamina(20, 200)){
 				var isLeft = isColliding(leftSideBody());
 				player.velocity.x += isLeft ? 0.3 : -0.3;
 				player.velocity.y += -0.4;
-				alreadyWallJumped = true;
 			}
+
+			if((keys[KEY_LEFT] || keys[KEY_RIGHT]) && keys[KEY_ALT] && onGround && spendStamina(1, 0, true))
+				control *= 1.5;
 
 			if(keys[KEY_LEFT]){
 				facingRight = false;
@@ -153,7 +149,7 @@
 			}
 
 			hanging = false;
-			if(keys[KEY_SHIFT] && onWall && !alreadyWallJumped && spendStamina(0.5, 0, true)){
+			if(keys[KEY_SHIFT] && onWall && spendStamina(0.5, 0, true)){
 				hanging = true;
 				player.velocity.x *= 0.5;
 				player.velocity.y *= 0.5
