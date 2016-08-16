@@ -14,23 +14,13 @@
 
 		canvas.focus();
 		var c = canvas.getContext("2d");
-		var keys = new Object();
+		
 
 		var player_sheet = new Image();
 		player_sheet.src = 'assets/mudd_shotgun.png';
 
 		var wood_box = new Image();
 		wood_box.src = 'assets/wood_box.png';
-
-		document.onkeydown = function(e){
-			e.preventDefault();
-			keys[e.keyCode] = true;
-		}
-
-		document.onkeyup = function(e){
-			e.preventDefault();
-			delete keys[e.keyCode];
-		}
 
 		var friction = 0.9999;
 		var gravity = 0.001;
@@ -98,6 +88,8 @@
 			})
 		}
 
+		var keys = new Object();
+
 		var KEY_ENTER = 13;
 		var KEY_UP = 87;
 		var KEY_DOWN = 83;
@@ -106,7 +98,6 @@
 		var KEY_SPACE = 32;
 		var KEY_SHIFT = 16;
 		var KEY_ALT = 18;
-		var KEY_P = 80;
 
 		var acceleration = 0.0020;
 		var climbAcceleration = 0.0040;
@@ -122,6 +113,16 @@
 
 		var facingRight = true;
 		var walkTime = 0;
+
+		document.onkeydown = function(e){
+			e.preventDefault();
+			keys[e.keyCode] = true;
+		}
+
+		document.onkeyup = function(e){
+			e.preventDefault();
+			delete keys[e.keyCode];
+		}
 
 		function controls(timeStep){
 			onGround = isColliding(footBody());
