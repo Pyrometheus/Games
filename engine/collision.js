@@ -88,7 +88,7 @@ function runFor(timeStep, bodies, onCollide){ //This is still runs in O(n^2) per
 				var bodyJ = bodies[j];
 				var thisCollision = impactData(bodyI, bodyJ, sub(bodyI.velocity, bodyJ.velocity));
 
-				if(thisCollision.time > 0 && thisCollision.time <= remainingTime && (collision === null || thisCollision.time <= collision.time)){
+				if(thisCollision.time > -1 && thisCollision.time <= remainingTime && (collision === null || thisCollision.time <= collision.time)){
 					thisCollision.body = bodyI;
 					thisCollision.other = bodyJ;
 					collision = thisCollision;
@@ -107,8 +107,11 @@ function runFor(timeStep, bodies, onCollide){ //This is still runs in O(n^2) per
 	moveBodies(remainingTime, bodies);
 }
 
+var restVelocity = 0.01;
 function moveBodies(timeStep, bodies){
 	for(var body of bodies){
+		if(Math.abs(body.velocity.y) < restVelocity)
+			body.velocity.y = 0;
 		body.position.x += timeStep * body.velocity.x;
 		body.position.y += timeStep * body.velocity.y;
 	}
@@ -121,15 +124,6 @@ function positionalCorrection(body, other, side){
 	if(side == 'left' || side == 'right')
 		return;
 	correctVertical(body, other);
-	// var lower, upper;
-	// if(body.position.y > other.position.y){
-	// 	lower = body;
-	// 	upper = other;
-	// } else {
-	// 	lower = other;
-	// 	upper = body;
-	// }
-	// upper.position.y = lower.position.y - upper.height - skin;
 }
 
 function correctVertical(body, other){

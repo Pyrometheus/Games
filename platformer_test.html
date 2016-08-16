@@ -32,15 +32,6 @@
 			delete keys[e.keyCode];
 		}
 
-		var KEY_ENTER = 13;
-		var KEY_UP = 87;
-		var KEY_DOWN = 83;
-		var KEY_LEFT = 65;
-		var KEY_RIGHT = 68; 
-		var KEY_SPACE = 32;
-		var KEY_SHIFT = 16;
-		var KEY_ALT = 18;
-
 		var friction = 0.9999;
 		var gravity = 0.001;
 
@@ -56,21 +47,24 @@
 			player.color = hsl(0.3,1,0.9);
 			bodies.push(player);
 
-			var box = body(vclone(player.position), vec(0,0), 50, 50);
-			box.position.y += player.height + 10;
-			box.mass = 100;
-			//box.color = '#ffd480';
-			box.image = wood_box;
-			bodies.push(box);
+			for(var i = 0; i < 3; i++){
+				var box = body(vclone(player.position), vec(0,0), 50, 50);
+				box.position.y += player.height + 10;
+				box.position.x += i * (box.width + 10);
+				box.mass = 50;
+				box.image = wood_box;
+				bodies.push(box);				
+			}
 
 			var edgeUp = body(vec(0,0), vec(0,0), canvas.width, canvas.height / 20);
 			var edgeDown = body(vec(0, canvas.height * 19/20), vec(0,0), canvas.width, canvas.height / 20);
 			var edgeLeft = body(vec(0,0), vec(0,0), canvas.width / 20, canvas.height);
 			var edgeRight = body(vec(canvas.width * 19/20 ,0), vec(0,0), canvas.width / 20, canvas.height);
 
-			var edgeMid = body(vec(canvas.width / 2, canvas.height * 9/20), vec(0,0), canvas.width / 2, canvas.height / 20);
+			var rightLedge = body(vec(canvas.width * 14/20, canvas.height * 9/20), vec(0,0), canvas.width / 4, canvas.height / 20);
+			var leftLedge = body(vec(canvas.width * 1/20, canvas.height * 9/20), vec(0,0), canvas.width / 8, canvas.height / 20);
 
-			for(var edge of [edgeUp,edgeDown,edgeLeft,edgeRight, edgeMid]){
+			for(var edge of [edgeUp,edgeDown,edgeLeft,edgeRight, rightLedge, leftLedge]){
 				edge.isEdge = true;
 				edge.mass = Infinity;
 				edge.color = '#473a1f';
@@ -89,18 +83,44 @@
 			physics(timeStep);
 		}
 
+		function physics(timeStep){
+			for(var body of bodies){
+				if(!body.isEdge)
+					body.velocity.y += gravity * timeStep;
+
+				body.velocity.x *= Math.pow(friction, timeStep);
+				body.velocity.y *= Math.pow(friction, timeStep);
+			}
+
+			runFor(timeStep, bodies, function(body, other, side){
+				var restitution = body == player || other == player ? 0.1 : 0.2;
+				bounce(body, other, side, restitution);
+			})
+		}
+
+		var KEY_ENTER = 13;
+		var KEY_UP = 87;
+		var KEY_DOWN = 83;
+		var KEY_LEFT = 65;
+		var KEY_RIGHT = 68; 
+		var KEY_SPACE = 32;
+		var KEY_SHIFT = 16;
+		var KEY_ALT = 18;
+		var KEY_P = 80;
+
 		var acceleration = 0.0020;
 		var climbAcceleration = 0.0040;
 		var onGround = false;
 		var onWall = false;
 		var onCeiling = false;
+		var alreadyWallJumped = false;
 		var airControl = 0.15;
 		var stamina = 100;
 		var staminaRegen = 0.05;
 		var coolDown = 0;
-		var facingRight = true;
 		var hanging = false;
 
+		var facingRight = true;
 		var walkTime = 0;
 
 		function controls(timeStep){
@@ -109,6 +129,9 @@
 			onCeiling = isColliding(headBody());
 
 			var control = onGround ? 1 : (onCeiling ? 0.5 : airControl);
+
+			if(!onWall)
+				alreadyWallJumped = false;
 
 			if(onGround){
 				stamina += staminaRegen * timeStep;
@@ -125,15 +148,32 @@
 			if(!onGround || Math.abs(player.velocity.x) < 0.01)
 				walkTime = 0;
 
-			if(keys[KEY_SPACE] && onGround && spendStamina(20, 200)){
+			if(keys[KEY_SPACE] && onGround && spendStamina(15, 200)){
 				player.velocity.y += -0.5;
 			}
 
-			if(keys[KEY_SPACE] && onWall && spendStamina(20, 200)){
+			if(keys[KEY_SPACE] && onWall && spendStamina(15, 200)){
 				var isLeft = isColliding(leftSideBody());
 				player.velocity.x += isLeft ? 0.3 : -0.3;
 				player.velocity.y += -0.4;
+				alreadyWallJumped = true;
 			}
+
+			hanging = false;
+			if(keys[KEY_SHIFT] && onWall && !alreadyWallJumped && spendStamina(0.2, 0, true)){
+				hanging = true;
+				player.velocity.x *= 0.1;
+				player.velocity.y = -gravity * timeStep;
+			}
+
+			if(keys[KEY_UP] && hanging && spendStamina(0.2, 0, true))
+				player.velocity.y -= climbAcceleration * timeStep;
+
+			if(keys[KEY_SHIFT] && onCeiling && spendStamina(0.5, 0, true)){
+				player.velocity.x *= 0.9;
+				player.velocity.y = -gravity * timeStep;
+			}
+
 
 			if((keys[KEY_LEFT] || keys[KEY_RIGHT]) && keys[KEY_ALT] && onGround && spendStamina(1, 0, true))
 				control *= 1.5;
@@ -147,20 +187,6 @@
 				facingRight = true;
 				player.velocity.x += acceleration * timeStep * control;
 			}
-
-			hanging = false;
-			if(keys[KEY_SHIFT] && onWall && spendStamina(0.5, 0, true)){
-				hanging = true;
-				player.velocity.x *= 0.5;
-				player.velocity.y *= 0.5
-			}
-
-			if(keys[KEY_UP] && hanging && spendStamina(0.5, 0, true))
-				player.velocity.y -= climbAcceleration * timeStep;
-
-			if(keys[KEY_SHIFT] && onCeiling && spendStamina(1, 0, true)){
-				player.velocity.y -= 0.1 * timeStep;
-			}
 		}
 
 		function spendStamina(amount, coolDownTime, ignoreCoolDown){
@@ -172,30 +198,14 @@
 			return false;
 		}
 
-		function physics(timeStep){
-			for(var body of bodies){
-				if(!body.isEdge)
-					body.velocity.y += gravity * timeStep;
-
-				body.velocity.x *= Math.pow(friction, timeStep);
-				body.velocity.y *= Math.pow(friction, timeStep);
-			}
-
-			runFor(timeStep, bodies, function(body, other, side){
-				var restitution = body == player || other == player ? 0.1 : 0.5;
-				bounce(body, other, side, restitution);
-			})
-		}
-
 		var controlRegionSize = 5;
 		function footBody(){
-			var foot = body(vclone(player.position), vec(0,0), player.width / 2, controlRegionSize * 2);
+			var foot = body(vclone(player.position), vec(0,0), player.width, controlRegionSize * 2);
 			foot.position.y += player.height - controlRegionSize;
-			foot.position.x += player.width / 4;
 			return foot;
 		}
 
-		var headRegionSize = 10;
+		var headRegionSize = 5;
 		function headBody(){
 			var head = body(vclone(player.position), vec(0,0), player.width, headRegionSize * 2);
 			head.position.y -= headRegionSize;
@@ -222,13 +232,6 @@
 					return true;
 			}
 			return false;
-		}
-
-		function draw(body, color){
-			c.fillStyle = color || body.color || 'red';
-			c.fillRect(body.position.x, body.position.y, body.width, body.height);
-			if(body.image)
-				c.drawImage(body.image, body.position.x, body.position.y, body.width, body.height);
 		}
 
 		var debugDisplay = false;
@@ -260,6 +263,13 @@
 
 			c.fillStyle = 'yellow';
 			c.fillRect(canvas.width - coolDown, 0, coolDown, 20);
+		}
+
+		function draw(body, color){
+			c.fillStyle = color || body.color || 'red';
+			c.fillRect(body.position.x, body.position.y, body.width, body.height);
+			if(body.image)
+				c.drawImage(body.image, body.position.x, body.position.y, body.width, body.height);
 		}
 
 		function drawImage(source, sx, sy, sw, sh, x, y, w, h, flip, center){
